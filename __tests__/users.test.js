@@ -14,6 +14,7 @@ describe("Test User class", function () {
       last_name: "Testy",
       phone: "+14155550000",
     });
+    console.log('in TestUserClass test');
   });
 
   test("can register", async function () {

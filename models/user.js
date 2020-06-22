@@ -12,12 +12,12 @@ class User {
    */
 
   static async register({ username, password, first_name, last_name, phone }) {
-    const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
-    const result = await db.query(`
-    INSERT INTO users (username, password, first_name, last_name, phone, join_at, last_login_at)
-    VALUES($1, $2, $3, $4, $5, current_timestamp, current_timestamp)
-    RETURNING username, password, first_name, last_name, phone;`, [username, hashedPassword, first_name, last_name, phone]);
-    return result.rows[0];
+      const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
+      const result = await db.query(`
+      INSERT INTO users (username, password, first_name, last_name, phone, join_at, last_login_at)
+      VALUES($1, $2, $3, $4, $5, current_timestamp, current_timestamp)
+      RETURNING username, password, first_name, last_name, phone;`, [username, hashedPassword, first_name, last_name, phone]);
+      return result.rows[0];
   };
 
   /** Authenticate: is this username/password valid? Returns boolean. */
@@ -40,7 +40,6 @@ class User {
       SET last_login_at = $2
       where username = $1
       `, [username, lastLogin]);
-    return;
   };
 
   /** All: basic info on all users:
@@ -80,30 +79,24 @@ class User {
    */
 
   static async messagesFrom(username) {
-    // const userResult = await db.query(`
-    // SELECT username, first_name, last_name, phone
-    // FROM us WHERE username = $1
-    // `, []);
     const results = await db.query(`
-    SELECT id, to_username, body, sent_at, read_at
-    FROM messages 
-    JOIN users 
-    ON from_username = username
-    WHERE username = $1;
+    SELECT m.id, m.to_username, m.body, m.sent_at, m.read_at, u.first_name, u.last_name, u.phone
+    FROM messages "m"
+    JOIN users "u"
+    ON m.to_username = u.username
+    WHERE m.from_username = $1;
     `, [username]);
     
-    // With On can we use as a conditional...
-    return results.rows.map(async u => {
+    return results.rows.map(u => {
 
-      let results = await db.query(`
-        SELECT id, first_name, last_name, phone
-        FROM users
-        WHERE id = $1
-    `, [u.to_username])
-        
       return ({
         id: u.id,
-        to_user: results.rows[0],
+        to_user: {
+          username: u.to_username,
+          first_name: u.first_name,
+          last_name: u.last_name,
+          phone: u.phone
+        },
         body: u.body,
         sent_at: u.sent_at,
         read_at: u.read_at
@@ -116,7 +109,7 @@ class User {
    * [{id, from_user, body, sent_at, read_at}]
    *
    * where from_user is
-   *   {id, first_name, last_name, phone}
+   *   {username, first_name, last_name, phone}
    */
 
   static async messagesTo(username) {
@@ -130,13 +123,13 @@ class User {
   
 
     return results.rows.map(m => {
-      ({
+      return ({
         id: m.id,
         from_user: {
-          id: m.from_username,
-          first_name: u.first_name,
-          last_name: u.last_name,
-          phone: u.phone
+          username: m.from_username,
+          first_name: m.first_name,
+          last_name: m.last_name,
+          phone: m.phone
         },
         body: m.body,
         sent_at: m.sent_at,
