@@ -12,8 +12,8 @@ class Message {
    *    {id, from_username, to_username, body, sent_at}
    */
 
-  static async create({from_username, to_username, body}) {
-    const result = await db.query(
+  static async create({ from_username, to_username, body }) {
+      const result = await db.query(
         `INSERT INTO messages (
               from_username,
               to_username,
@@ -22,7 +22,6 @@ class Message {
             VALUES ($1, $2, $3, current_timestamp)
             RETURNING id, from_username, to_username, body, sent_at`,
         [from_username, to_username, body]);
-
     return result.rows[0];
   }
 
@@ -96,7 +95,9 @@ class Message {
       read_at: m.read_at,
     };
   }
+  //Add method to confirm message being read belongs to that certain user.
 }
+
 
 
 module.exports = Message;
