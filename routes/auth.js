@@ -7,7 +7,9 @@ const sendSMS = require('../send_sms');
 const router = new express.Router();
 
 
-
+router.get('/login', function (req, res, next) {
+  return res.render("login.html");
+});
 
 /** POST /login - login: {username, password} => {token}
  *
@@ -29,6 +31,9 @@ router.post('/login', async function (req, res, next) {
 
 
 
+router.get('/register', function (req, res, next) {
+  return res.render("register.html");
+});
 
 /** POST /register - register user: registers, logs in, and returns token.
  *
