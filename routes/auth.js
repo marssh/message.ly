@@ -3,6 +3,7 @@ const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const { SECRET_KEY, ACCOUNT_SID, TWILIO_AUTH_TKN } = require('../config');
 const ExpressError = require('../expressError');
+const sendSMS = require('../send_sms');
 const router = new express.Router();
 
 
@@ -45,6 +46,36 @@ router.post('/register', async function (req, res, next) {
   }
 })
 
+router.get('/forgot', async (req, res, next) => {
+  //generate random code..
+  //Could put in a helper function
+  let randomCode = '';
+  while (randomCode.length < 6) {
+    randomCode = String(Math.floor(Math.random() * 999999));
+  }
+  try {
+    const { username } = req.body;
+    const { phone } = await User.get(username);
+    console.log(phone);
+    sendSMS(phone, `Here is your six digit code...${randomCode}`);
+    await User.forgotLogin(username, randomCode);
+    return res.json({message: "Let\'s reset your password"})
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/forgot', async (req, res, next) => {
+  try {
+    const { code, username, password: newPassword } = req.body;
+    const getCode = await User.getCode(username, code);
+    if (getCode === undefined) throw new ExpressError('Code does not exist', 400);
+    const name = await User.changePassword(newPassword, username);
+    return res.json({message: `${name.username} has been changed!!!`})
+  } catch (err) {
+    next(err);
+  };
+});
 
 
  module.exports = router;

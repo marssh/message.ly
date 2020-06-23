@@ -12,12 +12,12 @@ class User {
    */
 
   static async register({ username, password, first_name, last_name, phone }) {
-      const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
-      const result = await db.query(`
+    const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
+    const result = await db.query(`
       INSERT INTO users (username, password, first_name, last_name, phone, join_at, last_login_at)
       VALUES($1, $2, $3, $4, $5, current_timestamp, current_timestamp)
       RETURNING username, password, first_name, last_name, phone;`, [username, hashedPassword, first_name, last_name, phone]);
-      return result.rows[0];
+    return result.rows[0];
   };
 
   /** Authenticate: is this username/password valid? Returns boolean. */
@@ -134,6 +134,33 @@ class User {
         read_at: m.read_at
       });
     });
+  }
+
+  static async forgotLogin(username, randomCode) {
+    const result = await db.query(`
+      UPDATE users
+      SET pwd_reset_code = $1
+      where username = $2
+      `, [randomCode, username]);
+  };
+
+  static async getCode(username, code) {
+    const result = await db.query(`
+    SELECT username
+    FROM users WHERE (username = $1 and pwd_reset_code = $2);
+    `, [username, code])
+    return result.rows[0];
+  }
+
+  static async changePassword(password, username) {
+    let newPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
+    const result = await db.query(`
+    UPDATE users
+    SET password = $1, pwd_reset_code=NULL
+    WHERE username = $2
+    RETURNING username;
+    `, [newPassword, username])
+    return result.rows[0];
   }
 }
 
