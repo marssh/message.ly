@@ -14,6 +14,7 @@ const router = new express.Router();
 router.get('/', async (req, res, next) => {
   try {
     const users = await User.all();
+    
     return res.json({ users });
   } catch (err) {
     next(err);

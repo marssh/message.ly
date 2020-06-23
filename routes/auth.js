@@ -1,9 +1,10 @@
 const express = require('express');
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
-const { SECRET_KEY } = require('../config');
+const { SECRET_KEY, ACCOUNT_SID, TWILIO_AUTH_TKN } = require('../config');
 const ExpressError = require('../expressError');
 const router = new express.Router();
+
 
 
 

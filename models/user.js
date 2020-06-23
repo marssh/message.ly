@@ -33,13 +33,11 @@ class User {
   /** Update last_login_at for user */
 
   static async updateLoginTimestamp(username) {
-    // maybe fix this return statement
-    const lastLogin = new Date();
     const result = await db.query(`
       UPDATE users
-      SET last_login_at = $2
+      SET last_login_at = current_timestamp
       where username = $1
-      `, [username, lastLogin]);
+      `, [username]);
   };
 
   /** All: basic info on all users:
